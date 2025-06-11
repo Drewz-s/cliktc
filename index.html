@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cosmic Clicker</title>
+    <style>
+        :root {
+            --primary: #6a0dad;
+            --secondary: #9c27b0;
+            --dark: #121212;
+            --darker: #0a0a0a;
+            --light: #e1bee7;
+            --accent: #ff4081;
+            --text: #f3e5f5;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--dark);
+            color: var(--text);
+            background-image: radial-gradient(circle at center, var(--primary) 0%, transparent 70%), 
+                              linear-gradient(to bottom, var(--darker), var(--dark));
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid var(--primary);
+            margin-bottom: 20px;
+        }
+
+        .currency-display {
+            font-size: 1.5rem;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 1px solid var(--secondary);
+            box-shadow: 0 0 15px rgba(106, 13, 173, 0.5);
+        }
+
+        .clicker-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .clicker-btn {
+            background: linear-gradient(145deg, var(--primary), var(--secondary));
+            border: none;
+            border-radius: 50%;
+            width: 200px;
+            height: 200px;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 0 30px rgba(106, 13, 173, 0.7),
+                        inset 0 0 10px rgba(255, 255, 255, 0.2);
+            transition: transform 0.1s, box-shadow 0.1s;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .clicker-btn:active {
+            transform: scale(0.95);
+            box-shadow: 0 0 20px rgba(106, 13, 173, 0.5),
+                        inset 0 0 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .clicker-btn::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .clicker-btn:active::after {
+            opacity: 1;
+            transition: opacity 0s;
+        }
+
+        .click-value {
+            font-size: 1rem;
+            margin-top: 10px;
+            color: var(--light);
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: var(--darker);
+            border: none;
+            color: var(--text);
+            padding: 10px 20px;
+            margin: 0 5px;
+            border-radius: 5px 5px 0 0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+            background: rgba(10, 10, 10, 0.8);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: -1px;
+            border: 1px solid var(--primary);
+            box-shadow: 0 0 20px rgba(106, 13, 173, 0.3);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .upgrades-container, .shop-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .upgrade, .shop-item {
+            background: linear-gradient(145deg, var(--darker), #1a1a1a);
+            border-radius: 10px;
+            padding: 15px;
+            border: 1px solid var(--primary);
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upgrade:hover, .shop-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(106, 13, 173, 0.5);
+        }
+
+        .upgrade h3, .shop-item h3 {
+            color: var(--light);
+            margin-bottom: 10px;
+        }
+
+        .upgrade p, .shop-item p {
+            margin: 5px 0;
+            font-size: 0.9rem;
+        }
+
+        .upgrade-btn, .buy-btn {
+            background: linear-gradient(145deg, var(--primary), var(--secondary));
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .upgrade-btn:disabled, .buy-btn:disabled {
+            background: linear-gradient(145deg, #333, #444);
+            color: #777;
+            cursor: not-allowed;
+        }
+
+        .upgrade-btn:hover:not(:disabled), .buy-btn:hover:not(:disabled) {
+            background: linear-gradient(145deg, var(--secondary), var(--primary));
+            box-shadow: 0 0 10px rgba(156, 39, 176, 0.5);
+        }
+
+        .owned {
+            font-size: 0.8rem;
+            color: var(--light);
+            margin-top: 5px;
+        }
+
+        .income-display {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 1.2rem;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid var(--secondary);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: var(--darker);
+            border-radius: 10px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            border: 2px solid var(--primary);
+            box-shadow: 0 0 30px var(--primary);
+            text-align: center;
+            position: relative;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .daily-rewards {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .reward-day {
+            flex: 1;
+            min-width: 100px;
+            margin: 5px;
+            background: var(--darker);
+            border-radius: 10px;
+            padding: 15px 10px;
+            text-align: center;
+            border: 1px solid var(--primary);
+            opacity: 0.5;
+            transition: all 0.3s;
+        }
+
+        .reward-day.active {
+            opacity: 1;
+            border-color: var(--accent);
+            box-shadow: 0 0 15px rgba(255, 64, 129, 0.5);
+        }
+
+        .reward-day.claimed {
+            background: linear-gradient(145deg, var(--primary), var(--darker));
+            opacity: 1;
+        }
+
+        .reward-day.today {
+            transform: scale(1.05);
+            border-color: var(--accent);
+            box-shadow: 0 0 20px rgba(255, 64, 129, 0.7);
+        }
+
+        .wheel-container {
+            margin: 30px auto;
+            width: 300px;
+            height: 300px;
+            position: relative;
+        }
+
+        .wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: conic-gradient(
+                from 0deg,
+                #ff0000, #ff7f00, #ffff00, #00ff00, 
+                #0000ff, #4b0082, #9400d3, #ff0000
+            );
+            position: relative;
+            transition: transform 3s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+            transform: rotate(0deg);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .wheel-center {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: var(--darker);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 3px solid var(--accent);
+            z-index: 2;
+        }
+
+        .wheel-pointer {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 30px solid var(--accent);
+            z-index: 3;
+        }
+
+        .spin-btn {
+            background: var(--accent);
+            border: none;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s;
+            box-shadow: 0 0 15px rgba(255, 64, 129, 0.5);
+        }
+
+        .spin-btn:hover {
+            background: #ff1a75;
+            box-shadow: 0 0 25px rgba(255, 64, 129, 0.8);
+        }
+
+        .spin-btn:disabled {
+            background: #555;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--primary);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 20px rgba(106, 13, 173, 0.7);
+            transform: translateX(200%);
+            transition: transform 0.3s;
+            z-index: 1000;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        @media (max-width: 768px) {
+            .clicker-btn {
+                width: 150px;
+                height: 150px;
+                font-size: 1.2rem;
+            }
+
+            .upgrades-container, .shop-container {
+                grid-template-columns: 1fr;
+            }
+
+            .reward-day {
+                min-width: calc(14% - 10px);
+                padding: 10px 5px;
+                font-size: 0.8rem;
+            }
+
+            .wheel-container {
+                width: 250px;
+                height: 250px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .currency-display {
+                font-size: 1.2rem;
+                padding: 8px 15px;
+            }
+
+            .clicker-btn {
+                width: 120px;
+                height: 120px;
+                font-size: 1rem;
+            }
+
+            .tab-btn {
+                padding: 8px 12px;
+                font-size: 0.9rem;
+            }
+
+            .reward-day {
+                min-width: calc(14% - 5px);
+                padding: 8px 2px;
+                font-size: 0.7rem;
+            }
+
+            .wheel-container {
+                width: 200px;
+                height: 200px;
+            }
+        }
+
+        /* Animation for passive income */
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .passive-float {
+            animation: float 3s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Cosmic Clicker</h1>
+            <div class="currency-display">
+                <span id="money">0</span> ₽
+            </div>
+        </header>
+
+        <div class="income-display">
+            Пассивный доход: <span id="passive-income">0</span> ₽/сек
+        </div>
+
+        <div class="clicker-container">
+            <button class="clicker-btn" id="clicker">
+                КЛИКАЙ!
+                <span class="click-value">+<span id="click-value">1</span> ₽</span>
+            </button>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="upgrades">Улучшения</button>
+            <button class="tab-btn" data-tab="shop">Магазин</button>
+            <button class="tab-btn" data-tab="daily">Ежедневные награды</button>
+            <button class="tab-btn" data-tab="fortune">Фортуна</button>
+        </div>
+
+        <div class="tab-content active" id="upgrades">
+            <h2>Улучшения кликера</h2>
+            <p>Увеличьте мощность ваших кликов</p>
+            <div class="upgrades-container" id="upgrades-container">
+                <!-- Upgrades will be added here by JS -->
+            </div>
+        </div>
+
+        <div class="tab-content" id="shop">
+            <h2>Магазин пассивного дохода</h2>
+            <p>Покупайте предметы, которые будут приносить вам деньги автоматически</p>
+            <div class="shop-container" id="shop-container">
+                <!-- Shop items will be added here by JS -->
+            </div>
+        </div>
+
+        <div class="tab-content" id="daily">
+            <h2>Ежедневные награды</h2>
+            <p>Заходите каждый день, чтобы получить награду!</p>
+            <div class="daily-rewards" id="daily-rewards">
+                <!-- Daily rewards will be added here by JS -->
+            </div>
+            <button id="claim-daily" class="upgrade-btn">Получить сегодняшнюю награду</button>
+        </div>
+
+        <div class="tab-content" id="fortune">
+            <h2>Колесо фортуны</h2>
+            <p>Крутите колесо и выигрывайте от 1 до 1000 ₽!</p>
+            <div class="wheel-container">
+                <div class="wheel" id="wheel"></div>
+                <div class="wheel-center"></div>
+                <div class="wheel-pointer"></div>
+            </div>
+            <button id="spin-btn" class="spin-btn">Крутить (100 ₽)</button>
+        </div>
+    </div>
+
+    <div class="modal" id="reward-modal">
+        <div class="modal-content">
+            <button class="close-modal" id="close-modal">&times;</button>
+            <h2>Поздравляем!</h2>
+            <p id="reward-text">Вы получили 100 ₽</p>
+        </div>
+    </div>
+
+    <div class="modal" id="fortune-modal">
+        <div class="modal-content">
+            <button class="close-modal" id="close-fortune-modal">&times;</button>
+            <h2>Результат</h2>
+            <p id="fortune-text">Вы выиграли 100 ₽</p>
+        </div>
+    </div>
+
+    <div class="notification" id="notification">
+        Уведомление
+    </div>
+
+    <script>
+        // Game state
+        const gameState = {
+            money: 0,
+            clickValue: 1,
+            passiveIncome: 0,
+            lastDailyReward: null,
+            consecutiveDays: 0,
+            upgrades: [
+                { id: 1, name: "Улучшенный палец", description: "Увеличивает доход с клика на 1", price: 50, value: 1, owned: 0 },
+                { id: 2, name: "Стальной палец", description: "Увеличивает доход с клика на 2", price: 200, value: 2, owned: 0 },
+                { id: 3, name: "Золотой палец", description: "Увеличивает доход с клика на 5", price: 500, value: 5, owned: 0 },
+                { id: 4, name: "Платиновый палец", description: "Увеличивает доход с клика на 10", price: 2000, value: 10, owned: 0 },
+                { id: 5, name: "Алмазный палец", description: "Увеличивает доход с клика на 20", price: 5000, value: 20, owned: 0 },
+                { id: 6, name: "Кристальный палец", description: "Увеличивает доход с клика на 50", price: 10000, value: 50, owned: 0 },
+                { id: 7, name: "Космический палец", description: "Увеличивает доход с клика на 100", price: 50000, value: 100, owned: 0 },
+                { id: 8, name: "Божественный палец", description: "Увеличивает доход с клика на 200", price: 100000, value: 200, owned: 0 }
+            ],
+            shopItems: [
+                { id: 1, name: "Копилка", description: "Приносит 0.1 ₽ каждую секунду", price: 50, income: 0.1, owned: 0 },
+                { id: 2, name: "Ларёк", description: "Приносит 0.5 ₽ каждую секунду", price: 200, income: 0.5, owned: 0 },
+                { id: 3, name: "Магазин", description: "Приносит 2 ₽ каждую секунду", price: 1000, income: 2, owned: 0 },
+                { id: 4, name: "Торговый центр", description: "Приносит 10 ₽ каждую секунду", price: 5000, income: 10, owned: 0 },
+                { id: 5, name: "Фабрика", description: "Приносит 25 ₽ каждую секунду", price: 15000, income: 25, owned: 0 },
+                { id: 6, name: "Завод", description: "Приносит 75 ₽ каждую секунду", price: 50000, income: 75, owned: 0 },
+                { id: 7, name: "Корпорация", description: "Приносит 200 ₽ каждую секунду", price: 150000, income: 200, owned: 0 },
+                { id: 8, name: "Банк", description: "Приносит 500 ₽ каждую секунду", price: 500000, income: 500, owned: 0 },
+                { id: 9, name: "Нефтяная компания", description: "Приносит 1500 ₽ каждую секунду", price: 1500000, income: 1500, owned: 0 },
+                { id: 10, name: "Технологический гигант", description: "Приносит 5000 ₽ каждую секунду", price: 5000000, income: 5000, owned: 0 },
+                { id: 11, name: "Космическая станция", description: "Приносит 15000 ₽ каждую секунду", price: 15000000, income: 15000, owned: 0 },
+                { id: 12, name: "Галактическая империя", description: "Приносит 50000 ₽ каждую секунду", price: 50000000, income: 50000, owned: 0 },
+                { id: 13, name: "Квантовая ферма", description: "Приносит 0.2 ₽ каждую секунду", price: 100, income: 0.2, owned: 0 },
+                { id: 14, name: "Фриланс", description: "Приносит 1 ₽ каждую секунду", price: 500, income: 1, owned: 0 },
+                { id: 15, name: "IT-компания", description: "Приносит 5 ₽ каждую секунду", price: 2500, income: 5, owned: 0 },
+                { id: 16, name: "Хедж-фонд", description: "Приносит 20 ₽ каждую секунду", price: 10000, income: 20, owned: 0 },
+                { id: 17, name: "Криптоферма", description: "Приносит 50 ₽ каждую секунду", price: 30000, income: 50, owned: 0 },
+                { id: 18, name: "Венчурный фонд", description: "Приносит 150 ₽ каждую секунду", price: 75000, income: 150, owned: 0 },
+                { id: 19, name: "Международная корпорация", description: "Приносит 400 ₽ каждую секунду", price: 200000, income: 400, owned: 0 },
+                { id: 20, name: "Государство", description: "Приносит 1000 ₽ каждую секунду", price: 750000, income: 1000, owned: 0 },
+                { id: 21, name: "Планетарная экономика", description: "Приносит 3000 ₽ каждую секунду", price: 2500000, income: 3000, owned: 0 },
+                { id: 22, name: "Солнечная система", description: "Приносит 10000 ₽ каждую секунду", price: 10000000, income: 10000, owned: 0 },
+                { id: 23, name: "Межгалактический конгломерат", description: "Приносит 30000 ₽ каждую секунду", price: 30000000, income: 30000, owned: 0 },
+                { id: 24, name: "Мультивселенная", description: "Приносит 100000 ₽ каждую секунду", price: 100000000, income: 100000, owned: 0 },
+                { id: 25, name: "Лимонная стойка", description: "Приносит 0.3 ₽ каждую секунду", price: 150, income: 0.3, owned: 0 },
+                { id: 26, name: "Цветочный магазин", description: "Приносит 1.5 ₽ каждую секунду", price: 750, income: 1.5, owned: 0 },
+                { id: 27, name: "Кафе", description: "Приносит 7 ₽ каждую секунду", price: 3500, income: 7, owned: 0 },
+                { id: 28, name: "Ресторан", description: "Приносит 30 ₽ каждую секунду", price: 15000, income: 30, owned: 0 },
+                { id: 29, name: "Сеть ресторанов", description: "Приносит 100 ₽ каждую секунду", price: 60000, income: 100, owned: 0 },
+                { id: 30, name: "Отельный бизнес", description: "Приносит 300 ₽ каждую секунду", price: 200000, income: 300, owned: 0 },
+                { id: 31, name: "Курортный комплекс", description: "Приносит 800 ₽ каждую секунду", price: 500000, income: 800, owned: 0 },
+                { id: 32, name: "Туристическая империя", description: "Приносит 2000 ₽ каждую секунду", price: 1500000, income: 2000, owned: 0 },
+                { id: 33, name: "Космический туризм", description: "Приносит 6000 ₽ каждую секунду", price: 5000000, income: 6000, owned: 0 },
+                { id: 34, name: "Межпланетные круизы", description: "Приносит 20000 ₽ каждую секунду", price: 20000000, income: 20000, owned: 0 },
+                { id: 35, name: "Галактические путешествия", description: "Приносит 60000 ₽ каждую секунду", price: 75000000, income: 60000, owned: 0 },
+                { id: 36, name: "Портал в другие измерения", description: "Приносит 200000 ₽ каждую секунду", price: 250000000, income: 200000, owned: 0 },
+                { id: 37, name: "Автомойка", description: "Приносит 0.4 ₽ каждую секунду", price: 200, income: 0.4, owned: 0 },
+                { id: 38, name: "Автосалон", description: "Приносит 2 ₽ каждую секунду", price: 1000, income: 2, owned: 0 },
+                { id: 39, name: "Автозавод", description: "Приносит 12 ₽ каждую секунду", price: 6000, income: 12, owned: 0 },
+                { id: 40, name: "Авиакомпания", description: "Приносит 60 ₽ каждую секунду", price: 30000, income: 60, owned: 0 },
+                { id: 41, name: "Космические корабли", description: "Приносит 300 ₽ каждую секунду", price: 150000, income: 300, owned: 0 },
+                { id: 42, name: "Звездолёты", description: "Приносит 1500 ₽ каждую секунду", price: 750000, income: 1500, owned: 0 },
+                { id: 43, name: "Межзвёздные перевозки", description: "Приносит 7500 ₽ каждую секунду", price: 3750000, income: 7500, owned: 0 },
+                { id: 44, name: "Червоточины", description: "Приносит 37500 ₽ каждую секунду", price: 18750000, income: 37500, owned: 0 },
+                { id: 45, name: "Телепортация", description: "Приносит 187500 ₽ каждую секунду", price: 93750000, income: 187500, owned: 0 },
+                { id: 46, name: "Манипуляция пространством", description: "Приносит 937500 ₽ каждую секунду", price: 468750000, income: 937500, owned: 0 }
+            ],
+            dailyRewards: [
+                { day: 1, min: 30, max: 50, canBeIncome: false },
+                { day: 2, min: 50, max: 100, canBeIncome: false },
+                { day: 3, min: 100, max: 200, canBeIncome: false },
+                { day: 4, min: 150, max: 300, canBeIncome: true },
+                { day: 5, min: 200, max: 500, canBeIncome: true },
+                { day: 6, min: 300, max: 800, canBeIncome: true },
+                { day: 7, min: 500, max: 2000, canBeIncome: true }
+            ],
+            canSpin: true
+        };
+
+        // DOM elements
+        const moneyDisplay = document.getElementById('money');
+        const clickValueDisplay = document.getElementById('click-value');
+        const passiveIncomeDisplay = document.getElementById('passive-income');
+        const clickerBtn = document.getElementById('clicker');
+        const upgradesContainer = document.getElementById('upgrades-container');
+        const shopContainer = document.getElementById('shop-container');
+        const dailyRewardsContainer = document.getElementById('daily-rewards');
+        const claimDailyBtn = document.getElementById('claim-daily');
+        const wheel = document.getElementById('wheel');
+        const spinBtn = document.getElementById('spin-btn');
+        const rewardModal = document.getElementById('reward-modal');
+        const rewardText = document.getElementById('reward-text');
+        const closeModal = document.getElementById('close-modal');
+        const fortuneModal = document.getElementById('fortune-modal');
+        const fortuneText = document.getElementById('fortune-text');
+        const closeFortuneModal = document.getElementById('close-fortune-modal');
+        const notification = document.getElementById('notification');
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        // Initialize the game
+        function initGame() {
+            loadGame();
+            renderUpgrades();
+            renderShopItems();
+            renderDailyRewards();
+            updateUI();
+            setupEventListeners();
+            startPassiveIncome();
+        }
+
+        // Load game from localStorage
+        function loadGame() {
+            const savedGame = localStorage.getItem('cosmicClickerSave');
+            if (savedGame) {
+                const parsed = JSON.parse(savedGame);
+                
+                // Check if last save was today
+                const today = new Date().toDateString();
+                if (parsed.lastSaveDate !== today) {
+                    // Reset daily reward claim if it's a new day
+                    parsed.lastDailyReward = parsed.lastDailyReward === today ? today : null;
+                }
+                
+                Object.assign(gameState, parsed);
+            }
+        }
+
+        // Save game to localStorage
+        function saveGame() {
+            gameState.lastSaveDate = new Date().toDateString();
+            localStorage.setItem('cosmicClickerSave', JSON.stringify(gameState));
+        }
+
+        // Update all UI elements
+        function updateUI() {
+            moneyDisplay.textContent = formatNumber(gameState.money);
+            clickValueDisplay.textContent = gameState.clickValue;
+            passiveIncomeDisplay.textContent = formatNumber(gameState.passiveIncome);
+            
+            // Update upgrade buttons
+            document.querySelectorAll('.upgrade-btn').forEach(btn => {
+                const id = parseInt(btn.dataset.id);
+                const upgrade = gameState.upgrades.find(u => u.id === id);
+                btn.disabled = gameState.money < upgrade.price;
+            });
+            
+            // Update shop buttons
+            document.querySelectorAll('.buy-btn').forEach(btn => {
+                const id = parseInt(btn.dataset.id);
+                const item = gameState.shopItems.find(i => i.id === id);
+                btn.disabled = gameState.money < item.price;
+            });
+            
+            // Update spin button
+            spinBtn.disabled = !gameState.canSpin || gameState.money < 100;
+        }
+
+        // Format large numbers with commas
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+        // Render upgrades
+        function renderUpgrades() {
+            upgradesContainer.innerHTML = '';
+            gameState.upgrades.forEach(upgrade => {
+                const upgradeEl = document.createElement('div');
+                upgradeEl.className = 'upgrade';
+                upgradeEl.innerHTML = `
+                    <h3>${upgrade.name}</h3>
+                    <p>${upgrade.description}</p>
+                    <p>Цена: ${formatNumber(upgrade.price)} ₽</p>
+                    <p class="owned">Куплено: ${upgrade.owned}</p>
+                    <button class="upgrade-btn" data-id="${upgrade.id}">
+                        Купить (${formatNumber(upgrade.price)} ₽)
+                    </button>
+                `;
+                upgradesContainer.appendChild(upgradeEl);
+            });
+        }
+
+        // Render shop items
+        function renderShopItems() {
+            shopContainer.innerHTML = '';
+            gameState.shopItems.forEach(item => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'shop-item passive-float';
+                itemEl.style.animationDelay = `${item.id * 0.1}s`;
+                itemEl.innerHTML = `
+                    <h3>${item.name}</h3>
+                    <p>${item.description}</p>
+                    <p>Цена: ${formatNumber(item.price)} ₽</p>
+                    <p class="owned">Куплено: ${item.owned}</p>
+                    <button class="buy-btn" data-id="${item.id}">
+                        Купить (${formatNumber(item.price)} ₽)
+                    </button>
+                `;
+                shopContainer.appendChild(itemEl);
+            });
+        }
+
+        // Render daily rewards
+        function renderDailyRewards() {
+            dailyRewardsContainer.innerHTML = '';
+            const today = new Date();
+            const lastClaim = gameState.lastDailyReward ? new Date(gameState.lastDailyReward) : null;
+            const isNewDay = !lastClaim || lastClaim.toDateString() !== today.toDateString();
+            const nextDay = lastClaim ? new Date(lastClaim) : null;
+            
+            if (nextDay) {
+                nextDay.setDate(nextDay.getDate() + 1);
+                const isConsecutive = nextDay.toDateString() === today.toDateString();
+                
+                if (!isConsecutive) {
+                    gameState.consecutiveDays = 0;
+                }
+            }
+            
+            gameState.dailyRewards.forEach((reward, index) => {
+                const dayEl = document.createElement('div');
+                dayEl.className = 'reward-day';
+                
+                if (index < gameState.consecutiveDays) {
+                    dayEl.classList.add('claimed');
+                } else if (index === gameState.consecutiveDays && !isNewDay) {
+                    dayEl.classList.add('active');
+                }
+                
+                if (index === gameState.consecutiveDays && isNewDay) {
+                    dayEl.classList.add('today');
+                }
+                
+                dayEl.innerHTML = `
+                    <div>День ${reward.day}</div>
+                    ${reward.canBeIncome ? '<small>Деньги или доход</small>' : '<small>Только деньги</small>'}
+                `;
+                dailyRewardsContainer.appendChild(dayEl);
+            });
+            
+            claimDailyBtn.disabled = !isNewDay;
+        }
+
+        // Handle click
+        function handleClick() {
+            gameState.money += gameState.clickValue;
+            updateUI();
+            saveGame();
+            
+            // Create floating text animation
+            const floatText = document.createElement('div');
+            floatText.textContent = `+${gameState.clickValue} ₽`;
+            floatText.style.position = 'absolute';
+            floatText.style.color = '#9c27b0';
+            floatText.style.fontWeight = 'bold';
+            floatText.style.pointerEvents = 'none';
+            floatText.style.left = `${Math.random() * 100}%`;
+            floatText.style.top = `${Math.random() * 100}%`;
+            floatText.style.animation = 'floatUp 1s forwards';
+            
+            // Add animation style if not exists
+            if (!document.getElementById('floatAnimation')) {
+                const style = document.createElement('style');
+                style.id = 'floatAnimation';
+                style.textContent = `
+                    @keyframes floatUp {
+                        0% { transform: translateY(0); opacity: 1; }
+                        100% { transform: translateY(-100px); opacity: 0; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            clickerBtn.appendChild(floatText);
+            setTimeout(() => floatText.remove(), 1000);
+        }
+
+        // Buy upgrade
+        function buyUpgrade(id) {
+            const upgrade = gameState.upgrades.find(u => u.id === id);
+            
+            if (gameState.money >= upgrade.price) {
+                gameState.money -= upgrade.price;
+                gameState.clickValue += upgrade.value;
+                upgrade.owned++;
+                upgrade.price = Math.floor(upgrade.price * 1.5);
+                
+                updateUI();
+                renderUpgrades();
+                saveGame();
+                showNotification(`Куплено улучшение: ${upgrade.name}`);
+            }
+        }
+
+        // Buy shop item
+        function buyShopItem(id) {
+            const item = gameState.shopItems.find(i => i.id === id);
+            
+            if (gameState.money >= item.price) {
+                gameState.money -= item.price;
+                gameState.passiveIncome += item.income;
+                item.owned++;
+                item.price = Math.floor(item.price * 1.5);
+                
+                updateUI();
+                renderShopItems();
+                saveGame();
+                showNotification(`Куплено: ${item.name}`);
+            }
+        }
+
+        // Claim daily reward
+        function claimDailyReward() {
+            const today = new Date();
+            const reward = gameState.dailyRewards[gameState.consecutiveDays % 7];
+            let rewardAmount, isIncome = false;
+            
+            if (reward.canBeIncome && Math.random() > 0.7) {
+                // Give passive income item
+                const randomItem = gameState.shopItems[Math.floor(Math.random() * 20)];
+                rewardAmount = randomItem.name;
+                gameState.passiveIncome += randomItem.income;
+                isIncome = true;
+            } else {
+                // Give money
+                rewardAmount = Math.floor(Math.random() * (reward.max - reward.min + 1)) + reward.min;
+                gameState.money += rewardAmount;
+            }
+            
+            gameState.lastDailyReward = today.toString();
+            gameState.consecutiveDays++;
+            
+            // Show reward modal
+            rewardText.textContent = isIncome 
+                ? `Вы получили ${rewardAmount} (+${formatNumber(randomItem.income)} ₽/сек)`
+                : `Вы получили ${formatNumber(rewardAmount)} ₽`;
+            rewardModal.style.display = 'flex';
+            
+            updateUI();
+            renderDailyRewards();
+            saveGame();
+        }
+
+        // Spin the wheel
+        function spinWheel() {
+            if (!gameState.canSpin || gameState.money < 100) return;
+            
+            gameState.canSpin = false;
+            gameState.money -= 100;
+            updateUI();
+            
+            const spinDegrees = 1800 + Math.floor(Math.random() * 360); // 5 full rotations + random
+            wheel.style.transform = `rotate(${spinDegrees}deg)`;
+            
+            setTimeout(() => {
+                const normalizedDegrees = spinDegrees % 360;
+                const segmentSize = 360 / 8;
+                const segment = Math.floor(normalizedDegrees / segmentSize);
+                
+                // Prizes for each segment
+                const prizes = [1000, 500, 200, 100, 50, 20, 10, 1];
+                const prize = prizes[segment];
+                
+                gameState.money += prize;
+                updateUI();
+                saveGame();
+                
+                // Show fortune modal
+                fortuneText.textContent = `Вы выиграли ${formatNumber(prize)} ₽`;
+                fortuneModal.style.display = 'flex';
+                
+                // Reset wheel after delay
+                setTimeout(() => {
+                    gameState.canSpin = true;
+                    updateUI();
+                }, 3000);
+            }, 3000);
+        }
+
+        // Start passive income interval
+        function startPassiveIncome() {
+            setInterval(() => {
+                if (gameState.passiveIncome > 0) {
+                    gameState.money += gameState.passiveIncome / 10; // Update 10 times per second for smoother animation
+                    updateUI();
+                    saveGame();
+                }
+            }, 100);
+        }
+
+        // Show notification
+        function showNotification(message) {
+            notification.textContent = message;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Clicker button
+            clickerBtn.addEventListener('click', handleClick);
+            
+            // Upgrade buttons
+            upgradesContainer.addEventListener('click', e => {
+                if (e.target.classList.contains('upgrade-btn')) {
+                    buyUpgrade(parseInt(e.target.dataset.id));
+                }
+            });
+            
+            // Shop buttons
+            shopContainer.addEventListener('click', e => {
+                if (e.target.classList.contains('buy-btn')) {
+                    buyShopItem(parseInt(e.target.dataset.id));
+                }
+            });
+            
+            // Daily reward button
+            claimDailyBtn.addEventListener('click', claimDailyReward);
+            
+            // Spin button
+            spinBtn.addEventListener('click', spinWheel);
+            
+            // Modal close buttons
+            closeModal.addEventListener('click', () => {
+                rewardModal.style.display = 'none';
+            });
+            
+            closeFortuneModal.addEventListener('click', () => {
+                fortuneModal.style.display = 'none';
+            });
+            
+            // Tab switching
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    tabBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    const tabId = btn.dataset.tab;
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+            
+            // Save game when page is closed
+            window.addEventListener('beforeunload', saveGame);
+        }
+
+        // Start the game
+        initGame();
+    </script>
+</body>
+</html>
